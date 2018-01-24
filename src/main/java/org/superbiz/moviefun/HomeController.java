@@ -1,6 +1,13 @@
 package org.superbiz.moviefun;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.superbiz.moviefun.albums.Album;
 import org.superbiz.moviefun.albums.AlbumFixtures;
@@ -19,6 +26,13 @@ public class HomeController {
     private final MovieFixtures movieFixtures;
     private final AlbumFixtures albumFixtures;
 
+    @Autowired
+    PlatformTransactionManager moviesPlatformTransactionManager;
+
+    @Autowired
+    PlatformTransactionManager albumsPlatformTransactionManager;
+
+
     public HomeController(MoviesBean moviesBean, AlbumsBean albumsBean, MovieFixtures movieFixtures, AlbumFixtures albumFixtures) {
         this.moviesBean = moviesBean;
         this.albumsBean = albumsBean;
@@ -33,13 +47,35 @@ public class HomeController {
 
     @GetMapping("/setup")
     public String setup(Map<String, Object> model) {
-        for (Movie movie : movieFixtures.load()) {
-            moviesBean.addMovie(movie);
+
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+
+        TransactionStatus status = moviesPlatformTransactionManager.getTransaction(def);
+
+        try {
+            for (Movie movie : movieFixtures.load()) {
+                moviesBean.addMovie(movie);
+            }
+        } catch (Exception exception) {
+            moviesPlatformTransactionManager.rollback(status);
         }
 
-        for (Album album : albumFixtures.load()) {
-            albumsBean.addAlbum(album);
+        moviesPlatformTransactionManager.commit(status);
+
+
+        DefaultTransactionDefinition def1 = new DefaultTransactionDefinition();
+        TransactionStatus status1 = albumsPlatformTransactionManager.getTransaction(def1);
+
+        try {
+            for (Album album : albumFixtures.load()) {
+                System.out.println("album title:" + album.getTitle());
+                albumsBean.addAlbum(album);
+            }
+        } catch (Exception exception) {
+            albumsPlatformTransactionManager.rollback(status1);
         }
+
+        albumsPlatformTransactionManager.commit(status1);
 
         model.put("movies", moviesBean.getMovies());
         model.put("albums", albumsBean.getAlbums());
