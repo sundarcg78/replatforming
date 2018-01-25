@@ -2,10 +2,10 @@ spring:
   jpa:
     generate-ddl: true
     properties.hibernate.dialect: org.hibernate.dialect.MySQL5Dialect
-
   datasource:
     url: jdbc:mysql://localhost:3306/movies?useSSL=false
     username: root
+    password: Password
 
   mvc.view:
     prefix: /WEB-INF/
@@ -16,7 +16,7 @@ logging.level:
   org.superbiz.moviefun: DEBUG
 
 s3:
-  endpointUrl: <aws endpoint>
-  accessKey: <access key id>
-  secretKey: <secret access key>
-  bucketName: <name of the bucket>
+  endpointUrl: http://127.0.0.1:9000
+  accessKey: OE7GP3FWQOTVNY36MWR5
+  secretKey: O3S8V8siIw0aISzY7+kCPQm5RFUISONZKU7WUqM7
+  bucketName: moviefun
